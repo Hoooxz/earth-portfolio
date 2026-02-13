@@ -22,7 +22,7 @@ export default function Scene() {
   return (
     <div className="canvas-container" style={{ touchAction: 'none' }}>
       <Canvas
-        camera={{ position: [0, 0, isMobile ? 12 : 10], fov: 60 }}
+        camera={{ position: [0, 0, isMobile ? 10 : 10], fov: 60 }}
         gl={{ antialias: true, alpha: true }}
         dpr={isMobile ? [1, 1.5] : [1, 2]}
       >
@@ -35,8 +35,8 @@ export default function Scene() {
           <ParticleBackground count={isMobile ? 1500 : 3000} spread={isMobile ? 40 : 60} />
           
           <EarthGlobe 
-            position={isMobile ? [0, -1.2, 0] : [3.5, 0, 0]} 
-            scale={isMobile ? 0.8 : 0.9} 
+            position={isMobile ? [0, -0.8, 0] : [3.5, 0, 0]} 
+            scale={isMobile ? 1.3 : 0.9} 
           />
           
           {!isMobile && (
