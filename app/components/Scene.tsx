@@ -141,7 +141,7 @@ export default function Scene() {
   };
 
   return (
-    <div className="canvas-container" style={{ touchAction: 'none' }}>
+    <div className="canvas-container" style={{ touchAction: 'none', position: 'relative' }}>
       <Canvas
         camera={{ position: [0, 0, isMobile ? 10 : 10], fov: 60 }}
         gl={{ antialias: true, alpha: true }}
