@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useCallback, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Sphere, useTexture, Html } from '@react-three/drei';
+import { Sphere, useTexture, Html, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface EarthGlobeProps {
@@ -132,18 +132,23 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
     isDragging.current = false;
   }, []);
 
+  // Calculate pole positions for axis indicator
+  const radius = 2 * scale;
+  const poleTop = position[1] + radius + 3;
+  const poleBottom = position[1] - radius - 0.5;
+
   return (
     <group position={position}>
-      <Sphere
-        ref={globeRef}
-        args={[2 * scale, 64, 64]}
-        onPointerOver={() => { isHovered.current = true; }}
-        onPointerOut={() => { isHovered.current = false; }}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerUp}
-      >
+      <group ref={globeRef}>
+        <Sphere
+          args={[2 * scale, 64, 64]}
+          onPointerOver={() => { isHovered.current = true; }}
+          onPointerOut={() => { isHovered.current = false; }}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerUp}
+        >
         <meshPhongMaterial
           map={mapTexture}
           bumpMap={bumpTexture}
@@ -204,6 +209,119 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
 
       <pointLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
       <pointLight position={[-10, -10, -5]} intensity={0.3} color="#00d4ff" />
+      
+      {/* Axis indicator - as child of rotating group so it rotates with Earth */}
+      <AxisIndicator scale={scale} />
+    </group>
+  );
+}
+
+// Axis indicator component that rotates with the Earth
+function AxisIndicator({ scale }: { scale: number }) {
+  const radius = 2 * scale;
+  const poleTop = radius + 3;
+  const poleBottom = -radius - 0.5;
+  
+  return (
+    <group>
+      {/* North pole line */}
+      <mesh position={[0, (radius + poleTop) / 2, 0]}>
+        <cylinderGeometry args={[0.15, 0.15, poleTop - radius, 8]} />
+        <meshStandardMaterial 
+          color="#00d4ff" 
+          emissive="#00d4ff"
+          emissiveIntensity={5}
+          transparent
+          opacity={0.9}
+        />
+      </mesh>
+      
+      {/* North pole outer glow */}
+      <mesh position={[0, (radius + poleTop) / 2, 0]}>
+        <cylinderGeometry args={[0.25, 0.25, poleTop - radius, 8]} />
+        <meshStandardMaterial 
+          color="#00d4ff" 
+          emissive="#00d4ff"
+          emissiveIntensity={3}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+      
+      {/* South pole line */}
+      <mesh position={[0, (-radius + poleBottom) / 2, 0]}>
+        <cylinderGeometry args={[0.12, 0.12, radius + poleBottom, 8]} />
+        <meshStandardMaterial 
+          color="#ff6b6b" 
+          emissive="#ff6b6b"
+          emissiveIntensity={4}
+          transparent
+          opacity={0.8}
+        />
+      </mesh>
+      
+      {/* South pole outer glow */}
+      <mesh position={[0, (-radius + poleBottom) / 2, 0]}>
+        <cylinderGeometry args={[0.2, 0.2, radius + poleBottom, 8]} />
+        <meshStandardMaterial 
+          color="#ff6b6b" 
+          emissive="#ff6b6b"
+          emissiveIntensity={2.5}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+      
+      {/* North cone */}
+      <mesh position={[0, poleTop, 0]}>
+        <coneGeometry args={[0.12, 0.25, 8]} />
+        <meshStandardMaterial 
+          color="#00d4ff" 
+          emissive="#00d4ff"
+          emissiveIntensity={6}
+        />
+      </mesh>
+      
+      {/* South cone */}
+      <mesh position={[0, poleBottom, 0]}>
+        <coneGeometry args={[0.1, 0.2, 8]} />
+        <meshStandardMaterial 
+          color="#ff6b6b" 
+          emissive="#ff6b6b"
+          emissiveIntensity={5}
+        />
+      </mesh>
+      
+      {/* Point lights */}
+      <pointLight position={[0, poleTop + 0.3, 0]} color="#00d4ff" intensity={2} distance={3} />
+      <pointLight position={[0, poleTop + 0.5, 0]} color="#00d4ff" intensity={1.5} distance={4} />
+      <pointLight position={[0, poleBottom - 0.3, 0]} color="#ff6b6b" intensity={2} distance={2} />
+      <pointLight position={[0, poleBottom - 0.5, 0]} color="#ff6b6b" intensity={1.5} distance={3} />
+      
+      {/* Labels */}
+      <Text
+        position={[0.35, poleTop, 0]}
+        fontSize={0.25}
+        color="#00d4ff"
+        anchorX="left"
+        anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#003344"
+      >
+        N
+      </Text>
+      
+      <Text
+        position={[0.35, poleBottom, 0]}
+        fontSize={0.25}
+        color="#ff6b6b"
+        anchorX="left"
+        anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#441111"
+      >
+        S
+      </Text>
     </group>
   );
 }

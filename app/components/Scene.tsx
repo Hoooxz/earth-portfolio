@@ -48,7 +48,7 @@ function NorthPoleIndicator({ position, scale }: { position: [number, number, nu
       </mesh>
       
       <mesh position={[position[0], (position[1] - radius + poleBottom) / 2, position[2]]}>
-        <cylinderGeometry args={[0.25, 0.25, position[1] - radius - poleBottom, 8]} />
+        <cylinderGeometry args={[0.2, 0.2, position[1] - radius - poleBottom, 8]} />
         <meshStandardMaterial 
           color="#ff6b6b" 
           emissive="#ff6b6b"
@@ -76,10 +76,10 @@ function NorthPoleIndicator({ position, scale }: { position: [number, number, nu
         />
       </mesh>
       
-      <pointLight position={[position[0], poleTop + 0.3, position[2]]} color="#00d4ff" intensity={2} distance={3} />
+      <pointLight position={[position[0], poleTop + 0.3, position[2]]} color="#00d4ff" intensity={2.0} distance={3} />
       <pointLight position={[position[0], poleTop + 0.5, position[2]]} color="#00d4ff" intensity={1.5} distance={4} />
-      <pointLight position={[position[0], poleBottom - 0.3, position[2]]} color="#ff6b6b" intensity={1.5} distance={2} />
-      <pointLight position={[position[0], poleBottom - 0.5, position[2]]} color="#ff6b6b" intensity={1} distance={3} />
+      <pointLight position={[position[0], poleBottom - 0.3, position[2]]} color="#ff6b6b" intensity={2.0} distance={2} />
+      <pointLight position={[position[0], poleBottom - 0.5, position[2]]} color="#ff6b6b" intensity={1.5} distance={3} />
       
       <Text
         position={[position[0] + 0.35, poleTop, position[2]]}
@@ -136,11 +136,6 @@ export default function Scene() {
           <ParticleBackground count={isMobile ? 1500 : 3000} spread={isMobile ? 40 : 60} />
           
           <EarthGlobe 
-            position={isMobile ? [0, -0.8, 0] : [3.5, 0, 0]} 
-            scale={isMobile ? 1.3 : 0.9} 
-          />
-          
-          <NorthPoleIndicator 
             position={isMobile ? [0, -0.8, 0] : [3.5, 0, 0]} 
             scale={isMobile ? 1.3 : 0.9} 
           />
