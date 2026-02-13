@@ -8,6 +8,7 @@ import * as THREE from 'three';
 interface EarthGlobeProps {
   position?: [number, number, number];
   scale?: number;
+  time?: Date;
 }
 
 function cartesianToLatLng(x: number, y: number, z: number): { lat: number; lng: number } {
@@ -17,7 +18,7 @@ function cartesianToLatLng(x: number, y: number, z: number): { lat: number; lng:
   return { lat, lng };
 }
 
-export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlobeProps) {
+export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time }: EarthGlobeProps) {
   const globeRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
   const isHovered = useRef(false);
@@ -207,6 +208,31 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
   const handlePointerUp = useCallback(() => {
     isDragging.current = false;
   }, []);
+
+  // Calculate sun position based on time
+  const sunPosition = useMemo(() => {
+    if (!time) return { x: 10, y: 5, z: 10 };
+    
+    const dayOfYear = Math.floor((time.getTime() - new Date(time.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+    const hours = time.getHours() + time.getMinutes() / 60;
+    
+    // Earth's axial tilt (23.5 degrees)
+    const axialTilt = 23.5 * (Math.PI / 180);
+    
+    // Sun declination based on day of year
+    const sunDeclination = axialTilt * Math.sin((2 * Math.PI * dayOfYear) / 365);
+    
+    // Hour angle (0 at noon, negative in morning, positive in afternoon)
+    const hourAngle = ((hours - 12) / 12) * Math.PI;
+    
+    // Calculate sun position in 3D space
+    const distance = 20;
+    const x = distance * Math.cos(sunDeclination) * Math.sin(hourAngle);
+    const y = distance * Math.sin(sunDeclination);
+    const z = distance * Math.cos(sunDeclination) * Math.cos(hourAngle);
+    
+    return { x, y, z };
+  }, [time]);
 
   // Calculate pole positions for axis indicator
   const radius = 2 * scale;
