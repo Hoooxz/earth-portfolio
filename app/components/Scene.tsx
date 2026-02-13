@@ -20,10 +20,11 @@ export default function Scene() {
   }, []);
 
   return (
-    <div className="canvas-container">
+    <div className="canvas-container" style={{ touchAction: 'none' }}>
       <Canvas
         camera={{ position: [0, 0, isMobile ? 12 : 10], fov: 60 }}
         gl={{ antialias: true, alpha: true }}
+        dpr={isMobile ? [1, 1.5] : [1, 2]}
       >
         <color attach="background" args={['#0a0e27']} />
         <fog attach="fog" args={['#0a0e27', 10, 30]} />
@@ -31,11 +32,11 @@ export default function Scene() {
         <Suspense fallback={null}>
           <ambientLight intensity={0.2} />
           
-          <ParticleBackground count={3000} spread={60} />
+          <ParticleBackground count={isMobile ? 1500 : 3000} spread={isMobile ? 40 : 60} />
           
           <EarthGlobe 
-            position={isMobile ? [0, 0, 0] : [3.5, 0, 0]} 
-            scale={isMobile ? 0.6 : 0.9} 
+            position={isMobile ? [0, -1.2, 0] : [3.5, 0, 0]} 
+            scale={isMobile ? 0.8 : 0.9} 
           />
           
           {!isMobile && (

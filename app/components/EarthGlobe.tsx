@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo, useCallback } from 'react';
+import { useRef, useMemo, useCallback, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Sphere, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -15,8 +15,11 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
   const atmosphereRef = useRef<THREE.Mesh>(null);
   const isHovered = useRef(false);
   const isDragging = useRef(false);
-  useThree();
   const previousMouse = useRef({ x: 0, y: 0 });
+  const velocity = useRef({ x: 0, y: 0 });
+  const lastFrameTime = useRef(0);
+
+  useThree();
 
   const textures = useMemo(() => {
     return {
@@ -32,41 +35,82 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
     textures.specular,
   ]);
 
-  useFrame((state, delta) => {
+  useEffect(() => {
+    const handlePointerUp = () => {
+      isDragging.current = false;
+    };
+    
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+    
+    return () => {
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+    };
+  }, []);
+
+  useFrame(() => {
+    const now = performance.now();
+    const delta = Math.min((now - lastFrameTime.current) / 1000, 0.1);
+    lastFrameTime.current = now;
+
     if (globeRef.current) {
       if (!isDragging.current) {
-        globeRef.current.rotation.y += delta * 0.1;
+        velocity.current.x *= 0.95;
+        velocity.current.y *= 0.95;
+        
+        if (Math.abs(velocity.current.x) > 0.0001 || Math.abs(velocity.current.y) > 0.0001) {
+          globeRef.current.rotation.y += velocity.current.x;
+          globeRef.current.rotation.x += velocity.current.y;
+        } else {
+          globeRef.current.rotation.y += delta * 0.1;
+        }
       }
+      
       const targetScale = isHovered.current ? scale * 1.05 : scale;
       globeRef.current.scale.lerp(
         new THREE.Vector3(targetScale, targetScale, targetScale),
         0.1
       );
     }
+    
     if (atmosphereRef.current) {
       atmosphereRef.current.rotation.y += delta * 0.05;
     }
   });
 
-  const handlePointerDown = useCallback(() => {
+  const handlePointerDown = useCallback((e: { clientX: number; clientY: number; stopPropagation?: () => void }) => {
     isDragging.current = true;
-    previousMouse.current = { x: 0, y: 0 };
+    previousMouse.current = { x: e.clientX, y: e.clientY };
+    velocity.current = { x: 0, y: 0 };
+    e.stopPropagation?.();
+  }, []);
+
+  const handlePointerMove = useCallback((e: { clientX: number; clientY: number }) => {
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    
+    if (isDragging.current && globeRef.current) {
+      const deltaX = clientX - previousMouse.current.x;
+      const deltaY = clientY - previousMouse.current.y;
+      
+      if (previousMouse.current.x !== 0) {
+        const rotationX = deltaX * 0.005;
+        const rotationY = deltaY * 0.005;
+        
+        globeRef.current.rotation.y += rotationX;
+        globeRef.current.rotation.x += rotationY;
+        
+        velocity.current.x = rotationX;
+        velocity.current.y = rotationY;
+      }
+      
+      previousMouse.current = { x: clientX, y: clientY };
+    }
   }, []);
 
   const handlePointerUp = useCallback(() => {
     isDragging.current = false;
-  }, []);
-
-  const handlePointerMove = useCallback((e: { clientX?: number; clientY?: number }) => {
-    if (isDragging.current && globeRef.current) {
-      const deltaX = (e.clientX ?? 0) - previousMouse.current.x;
-      const deltaY = (e.clientY ?? 0) - previousMouse.current.y;
-      if (previousMouse.current.x !== 0) {
-        globeRef.current.rotation.y += deltaX * 0.005;
-        globeRef.current.rotation.x += deltaY * 0.005;
-      }
-      previousMouse.current = { x: e.clientX ?? 0, y: e.clientY ?? 0 };
-    }
   }, []);
 
   return (

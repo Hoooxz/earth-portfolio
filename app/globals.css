@@ -210,14 +210,66 @@ body {
     display: none;
   }
 
-  .content {
-    padding: 0 1.5rem;
+  .mobile-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .mobile-layout .content-section {
+    flex: 0 0 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+    position: relative;
+    z-index: 10;
+  }
+
+  .mobile-layout .scene-section {
+    flex: 0 0 50%;
+    position: relative;
+    z-index: 5;
+  }
+
+  .mobile-layout .canvas-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mobile-layout .content {
+    padding: 0;
     text-align: center;
     align-items: center;
   }
 
-  .content-cta {
-    flex-direction: column;
-    align-items: center;
+  .mobile-layout .content-title {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-layout .content-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .mobile-layout .content-cta {
+    flex-direction: row;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mobile-layout .cta-button {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8rem;
+  }
+
+  .hint {
+    display: none;
   }
 }
