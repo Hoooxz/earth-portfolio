@@ -15,24 +15,46 @@ function NorthPoleIndicator({ position, scale }: { position: [number, number, nu
   return (
     <group>
       <mesh position={[position[0], (position[1] + radius + poleTop) / 2, position[2]]}>
-        <cylinderGeometry args={[0.04, 0.04, poleTop - position[1] - radius, 8]} />
+        <cylinderGeometry args={[0.15, 0.15, poleTop - position[1] - radius, 8]} />
         <meshStandardMaterial 
           color="#00d4ff" 
           emissive="#00d4ff"
-          emissiveIntensity={2}
+          emissiveIntensity={5}
           transparent
           opacity={0.9}
         />
       </mesh>
       
+      <mesh position={[position[0], (position[1] + radius + poleTop) / 2, position[2]]}>
+        <cylinderGeometry args={[0.25, 0.25, poleTop - position[1] - radius, 8]} />
+        <meshStandardMaterial 
+          color="#00d4ff" 
+          emissive="#00d4ff"
+          emissiveIntensity={3}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+      
       <mesh position={[position[0], (position[1] - radius + poleBottom) / 2, position[2]]}>
-        <cylinderGeometry args={[0.03, 0.03, position[1] - radius - poleBottom, 8]} />
+        <cylinderGeometry args={[0.12, 0.12, position[1] - radius - poleBottom, 8]} />
         <meshStandardMaterial 
           color="#ff6b6b" 
           emissive="#ff6b6b"
-          emissiveIntensity={1.5}
+          emissiveIntensity={4}
           transparent
           opacity={0.8}
+        />
+      </mesh>
+      
+      <mesh position={[position[0], (position[1] - radius + poleBottom) / 2, position[2]]}>
+        <cylinderGeometry args={[0.25, 0.25, position[1] - radius - poleBottom, 8]} />
+        <meshStandardMaterial 
+          color="#ff6b6b" 
+          emissive="#ff6b6b"
+          emissiveIntensity={2.5}
+          transparent
+          opacity={0.3}
         />
       </mesh>
       
@@ -41,7 +63,7 @@ function NorthPoleIndicator({ position, scale }: { position: [number, number, nu
         <meshStandardMaterial 
           color="#00d4ff" 
           emissive="#00d4ff"
-          emissiveIntensity={2.5}
+          emissiveIntensity={6}
         />
       </mesh>
       
@@ -50,12 +72,14 @@ function NorthPoleIndicator({ position, scale }: { position: [number, number, nu
         <meshStandardMaterial 
           color="#ff6b6b" 
           emissive="#ff6b6b"
-          emissiveIntensity={2}
+          emissiveIntensity={5}
         />
       </mesh>
       
-      <pointLight position={[position[0], poleTop + 0.3, position[2]]} color="#00d4ff" intensity={0.8} distance={3} />
-      <pointLight position={[position[0], poleBottom - 0.3, position[2]]} color="#ff6b6b" intensity={0.5} distance={2} />
+      <pointLight position={[position[0], poleTop + 0.3, position[2]]} color="#00d4ff" intensity={2} distance={3} />
+      <pointLight position={[position[0], poleTop + 0.5, position[2]]} color="#00d4ff" intensity={1.5} distance={4} />
+      <pointLight position={[position[0], poleBottom - 0.3, position[2]]} color="#ff6b6b" intensity={1.5} distance={2} />
+      <pointLight position={[position[0], poleBottom - 0.5, position[2]]} color="#ff6b6b" intensity={1} distance={3} />
       
       <Text
         position={[position[0] + 0.35, poleTop, position[2]]}
