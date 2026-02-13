@@ -213,6 +213,7 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
       {/* Axis indicator - as child of rotating group so it rotates with Earth */}
       <AxisIndicator scale={scale} />
     </group>
+    </group>
   );
 }
 
