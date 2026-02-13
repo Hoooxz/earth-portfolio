@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0e27;
+  --foreground: #ffffff;
+  --accent: #00d4ff;
+  --accent-glow: rgba(0, 212, 255, 0.4);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.nav-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: 0 0 20px var(--accent-glow);
+  letter-spacing: 0.1em;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.nav-links a:hover {
+  color: var(--accent);
+  text-shadow: 0 0 15px var(--accent-glow);
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+.content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 8%;
+  pointer-events: none;
+}
+
+.content-title {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 1rem;
+  color: var(--foreground);
+}
+
+.content-title span {
+  color: var(--accent);
+  text-shadow: 0 0 30px var(--accent-glow);
+}
+
+.content-subtitle {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+
+.content-cta {
+  display: flex;
+  gap: 1.5rem;
+  pointer-events: auto;
+}
+
+.cta-button {
+  padding: 1rem 2rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.cta-primary {
+  background: var(--accent);
+  color: var(--background);
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+
+.cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 50px var(--accent-glow);
+}
+
+.cta-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+}
+
+.cta-secondary:hover {
+  background: rgba(0, 212, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.hint {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  z-index: 10;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .nav {
+    padding: 1rem;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .content {
+    padding: 0 1.5rem;
+    text-align: center;
+    align-items: center;
+  }
+
+  .content-cta {
+    flex-direction: column;
+    align-items: center;
+  }
+}
