@@ -154,8 +154,8 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
           bumpMap={bumpTexture}
           bumpScale={0.05}
           specularMap={specularTexture}
-          specular={new THREE.Color('#333333')}
-          shininess={15}
+          specular={new THREE.Color('#666666')}
+          shininess={30}
         />
         <Html
           position={[0, 0, 0]}
@@ -207,8 +207,9 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
         />
       </Sphere>
 
-      <pointLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
-      <pointLight position={[-10, -10, -5]} intensity={0.3} color="#00d4ff" />
+      <pointLight position={[10, 10, 10]} intensity={2.5} color="#ffffff" />
+      <pointLight position={[-10, -10, -5]} intensity={0.5} color="#00d4ff" />
+      <directionalLight position={[5, 3, 5]} intensity={1.5} color="#ffffff" />
       
       {/* Axis indicator - as child of rotating group so it rotates with Earth */}
       <AxisIndicator scale={scale} />

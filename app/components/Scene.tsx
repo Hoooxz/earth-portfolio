@@ -131,7 +131,7 @@ export default function Scene() {
         <fog attach="fog" args={['#0a0e27', 10, 30]} />
         
         <Suspense fallback={null}>
-          <ambientLight intensity={0.2} />
+          <ambientLight intensity={0.8} />
           
           <ParticleBackground count={isMobile ? 1500 : 3000} spread={isMobile ? 40 : 60} />
           
