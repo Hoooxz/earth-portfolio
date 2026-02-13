@@ -1,13 +1,20 @@
 'use client';
 
-import { useRef, useMemo, useCallback, useEffect } from 'react';
+import { useRef, useMemo, useCallback, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Sphere, useTexture } from '@react-three/drei';
+import { Sphere, useTexture, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface EarthGlobeProps {
   position?: [number, number, number];
   scale?: number;
+}
+
+function cartesianToLatLng(x: number, y: number, z: number): { lat: number; lng: number } {
+  const r = Math.sqrt(x * x + y * y + z * z);
+  const lat = Math.asin(z / r) * (180 / Math.PI);
+  const lng = Math.atan2(y, x) * (180 / Math.PI);
+  return { lat, lng };
 }
 
 export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlobeProps) {
@@ -18,8 +25,11 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
   const previousMouse = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, y: 0 });
   const lastFrameTime = useRef(0);
-
-  useThree();
+  const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
+  
+  const { camera } = useThree();
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const screenCenter = useMemo(() => new THREE.Vector2(0, 0), []);
 
   const textures = useMemo(() => {
     return {
@@ -72,6 +82,15 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
         new THREE.Vector3(targetScale, targetScale, targetScale),
         0.1
       );
+      
+      raycaster.setFromCamera(screenCenter, camera);
+      const intersects = raycaster.intersectObject(globeRef.current);
+      if (intersects.length > 0) {
+        const point = intersects[0].point;
+        const localPoint = globeRef.current.worldToLocal(point.clone());
+        const { lat, lng } = cartesianToLatLng(localPoint.x, localPoint.y, localPoint.z);
+        setCoordinates({ lat, lng });
+      }
     }
     
     if (atmosphereRef.current) {
@@ -133,6 +152,36 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
           specular={new THREE.Color('#333333')}
           shininess={15}
         />
+        <Html
+          position={[0, 0, 0]}
+          center
+          style={{
+            pointerEvents: 'none',
+          }}
+        >
+          <div
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              color: '#00d4ff',
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '12px',
+              background: 'rgba(10, 14, 39, 0.8)',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              border: '1px solid rgba(0, 212, 255, 0.3)',
+              backdropFilter: 'blur(10px)',
+              textShadow: '0 0 10px rgba(0, 212, 255, 0.5)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <div style={{ opacity: 0.7, fontSize: '10px', marginBottom: '4px' }}>LATITUDE</div>
+            <div style={{ fontWeight: 600 }}>{coordinates.lat.toFixed(4)}°</div>
+            <div style={{ opacity: 0.7, fontSize: '10px', marginTop: '8px', marginBottom: '4px' }}>LONGITUDE</div>
+            <div style={{ fontWeight: 600 }}>{coordinates.lng.toFixed(4)}°</div>
+          </div>
+        </Html>
       </Sphere>
       
       <Sphere ref={atmosphereRef} args={[2.2 * scale, 64, 64]}>
