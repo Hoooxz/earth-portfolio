@@ -27,6 +27,14 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
   const lastFrameTime = useRef(0);
   const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
   
+  const touchState = useRef({
+    initialDistance: 0,
+    initialScale: 1,
+    currentScale: 1,
+    targetScale: 1,
+    isPinching: false,
+  });
+  
   const { camera } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const screenCenter = useMemo(() => new THREE.Vector2(0, 0), []);
@@ -50,12 +58,79 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
       isDragging.current = false;
     };
     
+    const getTouchDistance = (touches: TouchList): number => {
+      if (touches.length < 2) return 0;
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        touchState.current.isPinching = true;
+        touchState.current.initialDistance = getTouchDistance(e.touches);
+        touchState.current.initialScale = touchState.current.currentScale;
+        isDragging.current = false;
+      } else if (e.touches.length === 1) {
+        isDragging.current = true;
+        previousMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        velocity.current = { x: 0, y: 0 };
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && touchState.current.isPinching) {
+        e.preventDefault();
+        const currentDistance = getTouchDistance(e.touches);
+        if (touchState.current.initialDistance > 0) {
+          const scaleFactor = currentDistance / touchState.current.initialDistance;
+          const newScale = touchState.current.initialScale * scaleFactor;
+          touchState.current.targetScale = Math.max(0.5, Math.min(3, newScale));
+        }
+      } else if (e.touches.length === 1 && isDragging.current && !touchState.current.isPinching && globeRef.current) {
+        const deltaX = e.touches[0].clientX - previousMouse.current.x;
+        const deltaY = e.touches[0].clientY - previousMouse.current.y;
+        
+        if (previousMouse.current.x !== 0) {
+          const rotationX = deltaX * 0.005;
+          const rotationY = deltaY * 0.005;
+          
+          globeRef.current.rotation.y += rotationX;
+          globeRef.current.rotation.x += rotationY;
+          
+          velocity.current.x = rotationX;
+          velocity.current.y = rotationY;
+        }
+        
+        previousMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        touchState.current.isPinching = false;
+        touchState.current.currentScale = touchState.current.targetScale;
+      }
+      if (e.touches.length === 0) {
+        isDragging.current = false;
+      } else if (e.touches.length === 1) {
+        previousMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('pointercancel', handlePointerUp);
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
     
     return () => {
       window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('pointercancel', handlePointerUp);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
 
@@ -77,11 +152,12 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1 }: EarthGlo
         }
       }
       
-      const targetScale = isHovered.current ? scale * 1.05 : scale;
+      const targetScale = isHovered.current ? scale * touchState.current.targetScale * 1.05 : scale * touchState.current.targetScale;
       globeRef.current.scale.lerp(
         new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.1
+        0.15
       );
+      touchState.current.currentScale += (touchState.current.targetScale - touchState.current.currentScale) * 0.15;
       
       raycaster.setFromCamera(screenCenter, camera);
       const intersects = raycaster.intersectObject(globeRef.current);
