@@ -1,7 +1,7 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Line, Text } from '@react-three/drei';
+import { OrbitControls, Text } from '@react-three/drei';
 import { Suspense, useEffect, useState } from 'react';
 import EarthGlobe from './EarthGlobe';
 import ParticleBackground from './ParticleBackground';
@@ -9,32 +9,76 @@ import Text3D from './Text3D';
 
 function NorthPoleIndicator({ position, scale }: { position: [number, number, number]; scale: number }) {
   const radius = 2 * scale;
-  const polePosition: [number, number, number] = [position[0], position[1] + radius, position[2]];
+  const poleTop = position[1] + radius + 3;
+  const poleBottom = position[1] - radius - 0.5;
   
   return (
     <group>
-      <Line
-        points={[
-          [position[0], position[1], position[2]],
-          [polePosition[0], polePosition[1] + 0.3, polePosition[2]]
-        ]}
-        color="#00d4ff"
-        lineWidth={2}
-        transparent
-        opacity={0.6}
-      />
-      <mesh position={polePosition}>
-        <sphereGeometry args={[0.08, 16, 16]} />
-        <meshBasicMaterial color="#00d4ff" />
+      <mesh position={[position[0], (position[1] + radius + poleTop) / 2, position[2]]}>
+        <cylinderGeometry args={[0.04, 0.04, poleTop - position[1] - radius, 8]} />
+        <meshStandardMaterial 
+          color="#00d4ff" 
+          emissive="#00d4ff"
+          emissiveIntensity={2}
+          transparent
+          opacity={0.9}
+        />
       </mesh>
+      
+      <mesh position={[position[0], (position[1] - radius + poleBottom) / 2, position[2]]}>
+        <cylinderGeometry args={[0.03, 0.03, position[1] - radius - poleBottom, 8]} />
+        <meshStandardMaterial 
+          color="#ff6b6b" 
+          emissive="#ff6b6b"
+          emissiveIntensity={1.5}
+          transparent
+          opacity={0.8}
+        />
+      </mesh>
+      
+      <mesh position={[position[0], poleTop, position[2]]}>
+        <coneGeometry args={[0.12, 0.25, 8]} />
+        <meshStandardMaterial 
+          color="#00d4ff" 
+          emissive="#00d4ff"
+          emissiveIntensity={2.5}
+        />
+      </mesh>
+      
+      <mesh position={[position[0], poleBottom, position[2]]}>
+        <coneGeometry args={[0.1, 0.2, 8]} />
+        <meshStandardMaterial 
+          color="#ff6b6b" 
+          emissive="#ff6b6b"
+          emissiveIntensity={2}
+        />
+      </mesh>
+      
+      <pointLight position={[position[0], poleTop + 0.3, position[2]]} color="#00d4ff" intensity={0.8} distance={3} />
+      <pointLight position={[position[0], poleBottom - 0.3, position[2]]} color="#ff6b6b" intensity={0.5} distance={2} />
+      
       <Text
-        position={[polePosition[0] + 0.25, polePosition[1], polePosition[2]]}
-        fontSize={0.2}
+        position={[position[0] + 0.35, poleTop, position[2]]}
+        fontSize={0.25}
         color="#00d4ff"
         anchorX="left"
         anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#003344"
       >
         N
+      </Text>
+      
+      <Text
+        position={[position[0] + 0.35, poleBottom, position[2]]}
+        fontSize={0.25}
+        color="#ff6b6b"
+        anchorX="left"
+        anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#441111"
+      >
+        S
       </Text>
     </group>
   );
