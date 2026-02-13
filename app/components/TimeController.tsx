@@ -113,19 +113,18 @@ export default function TimeController({
       </div>
 
       {/* Time Display */}
-      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', opacity: 0.6, marginBottom: '4px' }}>TIME</div>
-        <div style={{ fontSize: '32px', fontWeight: 700, color: '#00d4ff', textShadow: '0 0 20px rgba(0, 212, 255, 0.5)' }}>
+      <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+        <div style={{ fontSize: '24px', fontWeight: 700, color: '#00d4ff', textShadow: '0 0 15px rgba(0, 212, 255, 0.5)' }}>
           {formatTime(time)}
         </div>
       </div>
 
       {/* Sliders */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ marginBottom: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', opacity: 0.6, marginBottom: '4px' }}>
-            <span>DAY OF YEAR</span>
-            <span>{dayOfYear} / 365</span>
+      <div style={{ marginBottom: '12px' }}>
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>
+            <span>DAY</span>
+            <span>{dayOfYear}/365</span>
           </div>
           <input
             type="range"
@@ -146,9 +145,9 @@ export default function TimeController({
         </div>
 
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', opacity: 0.6, marginBottom: '4px' }}>
-            <span>TIME OF DAY</span>
-            <span>{Math.floor(totalHours)}h {Math.round((totalHours % 1) * 60)}m</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>
+            <span>HOUR</span>
+            <span>{Math.floor(totalHours)}:{String(Math.round((totalHours % 1) * 60)).padStart(2, '0')}</span>
           </div>
           <input
             type="range"
@@ -171,30 +170,28 @@ export default function TimeController({
       </div>
 
       {/* Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
         {/* Play/Pause Button */}
         <button
           onClick={onPlayPause}
           style={{
+            flex: 1,
             background: isPlaying ? 'rgba(255, 107, 107, 0.2)' : 'rgba(0, 212, 255, 0.2)',
-            border: `2px solid ${isPlaying ? '#ff6b6b' : '#00d4ff'}`,
-            borderRadius: '8px',
-            padding: '8px 16px',
+            border: `1px solid ${isPlaying ? '#ff6b6b' : '#00d4ff'}`,
+            borderRadius: '6px',
+            padding: '6px 8px',
             color: isPlaying ? '#ff6b6b' : '#00d4ff',
-            fontSize: '14px',
+            fontSize: '11px',
             fontWeight: 600,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
             transition: 'all 0.2s ease'
           }}
         >
-          {isPlaying ? '⏸️ PAUSE' : '▶️ PLAY'}
+          {isPlaying ? '⏸️' : '▶️'}
         </button>
 
         {/* Speed Controls */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '4px' }}>
           {[1, 10, 100].map((s) => (
             <button
               key={s}
@@ -202,10 +199,10 @@ export default function TimeController({
               style={{
                 background: speed === s ? 'rgba(0, 212, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)',
                 border: `1px solid ${speed === s ? '#00d4ff' : 'rgba(255, 255, 255, 0.2)'}`,
-                borderRadius: '6px',
-                padding: '6px 12px',
+                borderRadius: '4px',
+                padding: '4px 6px',
                 color: speed === s ? '#00d4ff' : 'rgba(255, 255, 255, 0.7)',
-                fontSize: '12px',
+                fontSize: '10px',
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
