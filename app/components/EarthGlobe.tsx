@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo, useCallback, useEffect, useState } from 'react';
+import { useRef, useMemo, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Sphere, useTexture, Html, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -18,15 +18,18 @@ function cartesianToLatLng(x: number, y: number, z: number): { lat: number; lng:
   return { lat, lng };
 }
 
-export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time }: EarthGlobeProps) {
+export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time: _time }: EarthGlobeProps) {
+  void _time;
   const globeRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
+  const latitudeRef = useRef<HTMLDivElement>(null);
+  const longitudeRef = useRef<HTMLDivElement>(null);
   const isHovered = useRef(false);
   const isDragging = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, y: 0 });
   const lastFrameTime = useRef(0);
-  const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
+  const activeTouchPointers = useRef<Map<number, { x: number; y: number }>>(new Map());
   
   const touchState = useRef({
     initialDistance: 0,
@@ -53,87 +56,6 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time }: Ea
     textures.bump,
     textures.specular,
   ]);
-
-  useEffect(() => {
-    const handlePointerUp = () => {
-      isDragging.current = false;
-    };
-    
-    const getTouchDistance = (touches: TouchList): number => {
-      if (touches.length < 2) return 0;
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        touchState.current.isPinching = true;
-        touchState.current.initialDistance = getTouchDistance(e.touches);
-        touchState.current.initialScale = touchState.current.currentScale;
-        isDragging.current = false;
-      } else if (e.touches.length === 1) {
-        isDragging.current = true;
-        previousMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        velocity.current = { x: 0, y: 0 };
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 2 && touchState.current.isPinching) {
-        e.preventDefault();
-        const currentDistance = getTouchDistance(e.touches);
-        if (touchState.current.initialDistance > 0) {
-          const scaleFactor = currentDistance / touchState.current.initialDistance;
-          const newScale = touchState.current.initialScale * scaleFactor;
-          touchState.current.targetScale = Math.max(0.5, Math.min(3, newScale));
-        }
-      } else if (e.touches.length === 1 && isDragging.current && !touchState.current.isPinching && globeRef.current) {
-        const deltaX = e.touches[0].clientX - previousMouse.current.x;
-        const deltaY = e.touches[0].clientY - previousMouse.current.y;
-        
-        if (previousMouse.current.x !== 0) {
-          const rotationX = deltaX * 0.005;
-          const rotationY = deltaY * 0.005;
-          
-          globeRef.current.rotation.y += rotationX;
-          globeRef.current.rotation.x += rotationY;
-          
-          velocity.current.x = rotationX;
-          velocity.current.y = rotationY;
-        }
-        
-        previousMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (e.touches.length < 2) {
-        touchState.current.isPinching = false;
-        touchState.current.currentScale = touchState.current.targetScale;
-      }
-      if (e.touches.length === 0) {
-        isDragging.current = false;
-      } else if (e.touches.length === 1) {
-        previousMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      }
-    };
-
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerUp);
-    window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd);
-    
-    return () => {
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerUp);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, []);
 
   useFrame(() => {
     const now = performance.now();
@@ -166,7 +88,14 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time }: Ea
         const point = intersects[0].point;
         const localPoint = globeRef.current.worldToLocal(point.clone());
         const { lat, lng } = cartesianToLatLng(localPoint.x, localPoint.y, localPoint.z);
-        setCoordinates({ lat, lng });
+        const latText = `${lat.toFixed(4)}°`;
+        const lngText = `${lng.toFixed(4)}°`;
+        if (latitudeRef.current && latitudeRef.current.textContent !== latText) {
+          latitudeRef.current.textContent = latText;
+        }
+        if (longitudeRef.current && longitudeRef.current.textContent !== lngText) {
+          longitudeRef.current.textContent = lngText;
+        }
       }
     }
     
@@ -175,17 +104,57 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time }: Ea
     }
   });
 
-  const handlePointerDown = useCallback((e: { clientX: number; clientY: number; stopPropagation?: () => void }) => {
-    isDragging.current = true;
-    previousMouse.current = { x: e.clientX, y: e.clientY };
-    velocity.current = { x: 0, y: 0 };
-    e.stopPropagation?.();
+  const getPointerDistance = useCallback(() => {
+    const pointers = Array.from(activeTouchPointers.current.values());
+    if (pointers.length < 2) return 0;
+    const dx = pointers[0].x - pointers[1].x;
+    const dy = pointers[0].y - pointers[1].y;
+    return Math.sqrt(dx * dx + dy * dy);
   }, []);
 
-  const handlePointerMove = useCallback((e: { clientX: number; clientY: number }) => {
+  const handlePointerDown = useCallback((e: { clientX: number; clientY: number; pointerType?: string; pointerId?: number; stopPropagation?: () => void; target?: EventTarget | null }) => {
+    if (e.pointerType === 'touch' && typeof e.pointerId === 'number') {
+      activeTouchPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (activeTouchPointers.current.size === 2) {
+        touchState.current.isPinching = true;
+        touchState.current.initialDistance = getPointerDistance();
+        touchState.current.initialScale = touchState.current.currentScale;
+        isDragging.current = false;
+      } else if (activeTouchPointers.current.size === 1) {
+        isDragging.current = true;
+        previousMouse.current = { x: e.clientX, y: e.clientY };
+        velocity.current = { x: 0, y: 0 };
+      }
+    } else {
+      isDragging.current = true;
+      previousMouse.current = { x: e.clientX, y: e.clientY };
+      velocity.current = { x: 0, y: 0 };
+    }
+
+    const target = e.target as { setPointerCapture?: (pointerId: number) => void } | null;
+    if (target && typeof e.pointerId === 'number') {
+      target.setPointerCapture?.(e.pointerId);
+    }
+    e.stopPropagation?.();
+  }, [getPointerDistance]);
+
+  const handlePointerMove = useCallback((e: { clientX: number; clientY: number; pointerType?: string; pointerId?: number }) => {
     const clientX = e.clientX;
     const clientY = e.clientY;
-    
+
+    if (e.pointerType === 'touch' && typeof e.pointerId === 'number') {
+      activeTouchPointers.current.set(e.pointerId, { x: clientX, y: clientY });
+      if (touchState.current.isPinching && activeTouchPointers.current.size >= 2) {
+        const currentDistance = getPointerDistance();
+        if (touchState.current.initialDistance > 0) {
+          const scaleFactor = currentDistance / touchState.current.initialDistance;
+          const newScale = touchState.current.initialScale * scaleFactor;
+          touchState.current.targetScale = Math.max(0.5, Math.min(3, newScale));
+        }
+        return;
+      }
+    }
+
     if (isDragging.current && globeRef.current) {
       const deltaX = clientX - previousMouse.current.x;
       const deltaY = clientY - previousMouse.current.y;
@@ -203,41 +172,30 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time }: Ea
       
       previousMouse.current = { x: clientX, y: clientY };
     }
+  }, [getPointerDistance]);
+
+  const handlePointerUp = useCallback((e?: { pointerType?: string; pointerId?: number; target?: EventTarget | null }) => {
+    if (e?.pointerType === 'touch' && typeof e.pointerId === 'number') {
+      activeTouchPointers.current.delete(e.pointerId);
+      if (activeTouchPointers.current.size < 2) {
+        touchState.current.isPinching = false;
+        touchState.current.currentScale = touchState.current.targetScale;
+      }
+      if (activeTouchPointers.current.size === 0) {
+        isDragging.current = false;
+      } else if (activeTouchPointers.current.size === 1) {
+        const [pointer] = activeTouchPointers.current.values();
+        previousMouse.current = { x: pointer.x, y: pointer.y };
+      }
+    } else {
+      isDragging.current = false;
+    }
+
+    const target = e?.target as { releasePointerCapture?: (pointerId: number) => void } | undefined;
+    if (target && typeof e?.pointerId === 'number') {
+      target.releasePointerCapture?.(e.pointerId);
+    }
   }, []);
-
-  const handlePointerUp = useCallback(() => {
-    isDragging.current = false;
-  }, []);
-
-  // Calculate sun position based on time
-  const sunPosition = useMemo(() => {
-    if (!time) return { x: 10, y: 5, z: 10 };
-    
-    const dayOfYear = Math.floor((time.getTime() - new Date(time.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
-    const hours = time.getHours() + time.getMinutes() / 60;
-    
-    // Earth's axial tilt (23.5 degrees)
-    const axialTilt = 23.5 * (Math.PI / 180);
-    
-    // Sun declination based on day of year
-    const sunDeclination = axialTilt * Math.sin((2 * Math.PI * dayOfYear) / 365);
-    
-    // Hour angle (0 at noon, negative in morning, positive in afternoon)
-    const hourAngle = ((hours - 12) / 12) * Math.PI;
-    
-    // Calculate sun position in 3D space
-    const distance = 20;
-    const x = distance * Math.cos(sunDeclination) * Math.sin(hourAngle);
-    const y = distance * Math.sin(sunDeclination);
-    const z = distance * Math.cos(sunDeclination) * Math.cos(hourAngle);
-    
-    return { x, y, z };
-  }, [time]);
-
-  // Calculate pole positions for axis indicator
-  const radius = 2 * scale;
-  const poleTop = position[1] + radius + 3;
-  const poleBottom = position[1] - radius - 0.5;
 
   return (
     <group position={position}>
@@ -250,6 +208,7 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time }: Ea
           onPointerUp={handlePointerUp}
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
         <meshPhongMaterial
           map={mapTexture}
@@ -284,9 +243,9 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time }: Ea
             }}
           >
             <div style={{ opacity: 0.7, fontSize: '10px', marginBottom: '4px' }}>LATITUDE</div>
-            <div style={{ fontWeight: 600 }}>{coordinates.lat.toFixed(4)}°</div>
+            <div ref={latitudeRef} style={{ fontWeight: 600 }}>0.0000°</div>
             <div style={{ opacity: 0.7, fontSize: '10px', marginTop: '8px', marginBottom: '4px' }}>LONGITUDE</div>
-            <div style={{ fontWeight: 600 }}>{coordinates.lng.toFixed(4)}°</div>
+            <div ref={longitudeRef} style={{ fontWeight: 600 }}>0.0000°</div>
           </div>
         </Html>
       </Sphere>
