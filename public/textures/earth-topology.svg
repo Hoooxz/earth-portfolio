@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024" viewBox="0 0 2048 1024">
+  <rect width="2048" height="1024" fill="#7f7f7f"/>
+  <g fill="#b5b5b5" opacity="0.9">
+    <ellipse cx="340" cy="390" rx="190" ry="120"/>
+    <ellipse cx="520" cy="650" rx="130" ry="170"/>
+    <ellipse cx="980" cy="370" rx="240" ry="140"/>
+    <ellipse cx="1180" cy="690" rx="140" ry="110"/>
+    <ellipse cx="1530" cy="410" rx="180" ry="130"/>
+    <ellipse cx="1760" cy="730" rx="180" ry="90"/>
+  </g>
+  <g stroke="#949494" stroke-width="3" opacity="0.4">
+    <path d="M0 128H2048"/>
+    <path d="M0 256H2048"/>
+    <path d="M0 384H2048"/>
+    <path d="M0 512H2048"/>
+    <path d="M0 640H2048"/>
+    <path d="M0 768H2048"/>
+    <path d="M0 896H2048"/>
+  </g>
+</svg>

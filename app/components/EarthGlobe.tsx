@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useMemo, useCallback } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { Sphere, useTexture, Html, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -13,8 +13,8 @@ interface EarthGlobeProps {
 
 function cartesianToLatLng(x: number, y: number, z: number): { lat: number; lng: number } {
   const r = Math.sqrt(x * x + y * y + z * z);
-  const lat = Math.asin(z / r) * (180 / Math.PI);
-  const lng = Math.atan2(y, x) * (180 / Math.PI);
+  const lat = Math.asin(y / r) * (180 / Math.PI);
+  const lng = Math.atan2(z, x) * (180 / Math.PI);
   return { lat, lng };
 }
 
@@ -29,6 +29,7 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time: _tim
   const previousMouse = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, y: 0 });
   const lastFrameTime = useRef(0);
+  const lastPointerHitPoint = useRef<THREE.Vector3 | null>(null);
   const activeTouchPointers = useRef<Map<number, { x: number; y: number }>>(new Map());
   
   const touchState = useRef({
@@ -39,15 +40,11 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time: _tim
     isPinching: false,
   });
   
-  const { camera } = useThree();
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
-  const screenCenter = useMemo(() => new THREE.Vector2(0, 0), []);
-
   const textures = useMemo(() => {
     return {
-      map: 'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg',
-      bump: 'https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png',
-      specular: 'https://unpkg.com/three-globe@2.31.1/example/img/earth-water.png',
+      map: '/textures/earth-blue-marble.svg',
+      bump: '/textures/earth-topology.svg',
+      specular: '/textures/earth-water.svg',
     };
   }, []);
 
@@ -82,11 +79,8 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time: _tim
       );
       touchState.current.currentScale += (touchState.current.targetScale - touchState.current.currentScale) * 0.15;
       
-      raycaster.setFromCamera(screenCenter, camera);
-      const intersects = raycaster.intersectObject(globeRef.current);
-      if (intersects.length > 0) {
-        const point = intersects[0].point;
-        const localPoint = globeRef.current.worldToLocal(point.clone());
+      if (lastPointerHitPoint.current) {
+        const localPoint = globeRef.current.worldToLocal(lastPointerHitPoint.current.clone());
         const { lat, lng } = cartesianToLatLng(localPoint.x, localPoint.y, localPoint.z);
         const latText = `${lat.toFixed(4)}°`;
         const lngText = `${lng.toFixed(4)}°`;
@@ -112,7 +106,13 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time: _tim
     return Math.sqrt(dx * dx + dy * dy);
   }, []);
 
-  const handlePointerDown = useCallback((e: { clientX: number; clientY: number; pointerType?: string; pointerId?: number; stopPropagation?: () => void; target?: EventTarget | null }) => {
+  const updatePointerCoordinates = useCallback((point?: THREE.Vector3) => {
+    if (!point) return;
+    lastPointerHitPoint.current = point.clone();
+  }, []);
+
+  const handlePointerDown = useCallback((e: { clientX: number; clientY: number; pointerType?: string; pointerId?: number; stopPropagation?: () => void; target?: EventTarget | null; point?: THREE.Vector3 }) => {
+    updatePointerCoordinates(e.point);
     if (e.pointerType === 'touch' && typeof e.pointerId === 'number') {
       activeTouchPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (activeTouchPointers.current.size === 2) {
@@ -136,11 +136,12 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time: _tim
       target.setPointerCapture?.(e.pointerId);
     }
     e.stopPropagation?.();
-  }, [getPointerDistance]);
+  }, [getPointerDistance, updatePointerCoordinates]);
 
-  const handlePointerMove = useCallback((e: { clientX: number; clientY: number; pointerType?: string; pointerId?: number }) => {
+  const handlePointerMove = useCallback((e: { clientX: number; clientY: number; pointerType?: string; pointerId?: number; point?: THREE.Vector3 }) => {
     const clientX = e.clientX;
     const clientY = e.clientY;
+    updatePointerCoordinates(e.point);
 
     if (e.pointerType === 'touch' && typeof e.pointerId === 'number') {
       activeTouchPointers.current.set(e.pointerId, { x: clientX, y: clientY });
@@ -172,7 +173,7 @@ export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time: _tim
       
       previousMouse.current = { x: clientX, y: clientY };
     }
-  }, [getPointerDistance]);
+  }, [getPointerDistance, updatePointerCoordinates]);
 
   const handlePointerUp = useCallback((e?: { pointerType?: string; pointerId?: number; target?: EventTarget | null }) => {
     if (e?.pointerType === 'touch' && typeof e.pointerId === 'number') {
@@ -313,7 +314,7 @@ function AxisIndicator({ scale }: { scale: number }) {
       
       {/* South pole line */}
       <mesh position={[0, (-radius + poleBottom) / 2, 0]}>
-        <cylinderGeometry args={[0.12, 0.12, radius + poleBottom, 8]} />
+        <cylinderGeometry args={[0.12, 0.12, Math.abs(radius + poleBottom), 8]} />
         <meshStandardMaterial 
           color="#ff6b6b" 
           emissive="#ff6b6b"
@@ -325,7 +326,7 @@ function AxisIndicator({ scale }: { scale: number }) {
       
       {/* South pole outer glow */}
       <mesh position={[0, (-radius + poleBottom) / 2, 0]}>
-        <cylinderGeometry args={[0.2, 0.2, radius + poleBottom, 8]} />
+        <cylinderGeometry args={[0.2, 0.2, Math.abs(radius + poleBottom), 8]} />
         <meshStandardMaterial 
           color="#ff6b6b" 
           emissive="#ff6b6b"

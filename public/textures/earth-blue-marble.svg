@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024" viewBox="0 0 2048 1024">
+  <defs>
+    <linearGradient id="ocean" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2f6fa3"/>
+      <stop offset="50%" stop-color="#2b648f"/>
+      <stop offset="100%" stop-color="#244f74"/>
+    </linearGradient>
+  </defs>
+  <rect width="2048" height="1024" fill="url(#ocean)"/>
+  <g fill="#6fa26a" opacity="0.9">
+    <ellipse cx="340" cy="390" rx="190" ry="120"/>
+    <ellipse cx="520" cy="650" rx="130" ry="170"/>
+    <ellipse cx="980" cy="370" rx="240" ry="140"/>
+    <ellipse cx="1180" cy="690" rx="140" ry="110"/>
+    <ellipse cx="1530" cy="410" rx="180" ry="130"/>
+    <ellipse cx="1760" cy="730" rx="180" ry="90"/>
+  </g>
+  <g fill="#7db36f" opacity="0.45">
+    <circle cx="290" cy="320" r="42"/>
+    <circle cx="445" cy="445" r="30"/>
+    <circle cx="1010" cy="310" r="38"/>
+    <circle cx="1410" cy="320" r="36"/>
+    <circle cx="1660" cy="665" r="30"/>
+  </g>
+  <g stroke="#8fbf8b" stroke-width="2" opacity="0.25">
+    <path d="M0 220H2048"/>
+    <path d="M0 512H2048"/>
+    <path d="M0 804H2048"/>
+  </g>
+</svg>
