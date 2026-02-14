@@ -5,10 +5,17 @@ import { useFrame } from '@react-three/fiber';
 import { Sphere, useTexture, Html, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
+import CloudOverlay from './CloudOverlay';
+import TempMapOverlay from './TempMapOverlay';
+
 interface EarthGlobeProps {
   position?: [number, number, number];
   scale?: number;
   time?: Date;
+  layers?: {
+    clouds?: { visible: boolean; opacity: number; url: string };
+    temp?: { visible: boolean; opacity: number; url: string };
+  };
 }
 
 function cartesianToLatLng(x: number, y: number, z: number): { lat: number; lng: number } {
@@ -18,8 +25,18 @@ function cartesianToLatLng(x: number, y: number, z: number): { lat: number; lng:
   return { lat, lng };
 }
 
-export default function EarthGlobe({ position = [3, 0, 0], scale = 1, time: _time }: EarthGlobeProps) {
+export default function EarthGlobe({ 
+  position = [3, 0, 0], 
+  scale = 1, 
+  time: _time,
+  layers 
+}: EarthGlobeProps) {
   void _time;
+  
+  // Default layers if not provided
+  const activeLayers = layers || {};
+  const cloudLayer = activeLayers.clouds;
+  const tempLayer = activeLayers.temp;
   const globeRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
   const latitudeRef = useRef<HTMLDivElement>(null);
