@@ -75,14 +75,14 @@ export default function TimeController({
     <div
       style={{
         position: 'fixed',
-        top: '20px',
-        right: '20px',
+        top: 'calc(20px + env(safe-area-inset-top, 0px))',
+        right: 'calc(20px + env(safe-area-inset-right, 0px))',
         background: 'rgba(10, 14, 39, 0.85)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(0, 212, 255, 0.3)',
         borderRadius: '16px',
         padding: '16px',
-        width: '280px',
+        width: 'min(90vw, 280px)',
         color: '#fff',
         fontFamily: 'JetBrains Mono, monospace',
         zIndex: 1000,
